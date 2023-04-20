@@ -1,7 +1,7 @@
 package ru.job4j.order.service;
 
-import ru.job4j.order.Domain.Card;
-import ru.job4j.order.Domain.Customer;
+import ru.job4j.order.domain.Card;
+import ru.job4j.order.domain.Customer;
 
 import java.util.Optional;
 

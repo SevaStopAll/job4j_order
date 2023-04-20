@@ -1,6 +1,6 @@
 package ru.job4j.order.service;
 
-import ru.job4j.order.Domain.Product;
+import ru.job4j.order.domain.Product;
 
 import java.util.Collection;
 import java.util.Optional;

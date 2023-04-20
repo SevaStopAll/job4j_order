@@ -1,7 +1,12 @@
 package ru.job4j.order.repository;
 
 import org.springframework.data.repository.CrudRepository;
-import ru.job4j.order.Domain.Order;
+import org.springframework.stereotype.Repository;
+import ru.job4j.order.domain.Order;
 
+import java.util.Collection;
+
+@Repository
 public interface OrderRepository extends CrudRepository<Order, Integer> {
+    Collection<Order> findAll();
 }
