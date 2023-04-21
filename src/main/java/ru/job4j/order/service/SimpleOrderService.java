@@ -3,10 +3,12 @@ package ru.job4j.order.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.job4j.order.domain.Dish;
 import ru.job4j.order.domain.Order;
 import ru.job4j.order.repository.OrderRepository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,5 +51,10 @@ public class SimpleOrderService implements OrderService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public List<Integer> getDishesIds(Optional<Order> order) {
+        return order.get().getDishes().stream().mapToInt(Dish::getId).boxed().toList();
     }
 }

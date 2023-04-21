@@ -1,16 +1,16 @@
 package ru.job4j.order.service;
 
-import ru.job4j.order.domain.Product;
+import ru.job4j.order.domain.Dish;
 
 import java.util.Collection;
 import java.util.Optional;
 
 public interface ProductService {
-    Optional<Product> findByName(String productName);
+    Optional<Dish> findByName(String productName);
 
-    Optional<Product> findById(int productId);
+    Optional<Dish> findById(int productId);
 
-    Optional<Product> save(Product product);
+    Optional<Dish> save(Dish dish);
 
-    Collection<Product> findAll();
+    Collection<Dish> findAll();
 }

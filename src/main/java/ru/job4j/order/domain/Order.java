@@ -22,10 +22,14 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
+    @Setter
+    @Getter
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "status")
+    @Setter
+    @Getter
     private Status status;
 
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
@@ -34,6 +38,8 @@ public class Order {
             joinColumns = {@JoinColumn(name = "order_id")},
             inverseJoinColumns = {@JoinColumn(name = "product_id")}
     )
-    private List<Product> products = new ArrayList<>();
+    @Setter
+    @Getter
+    private List<Dish> dishes = new ArrayList<>();
 
 }

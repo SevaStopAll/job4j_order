@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @AllArgsConstructor
 @Entity
-public class Product {
+public class Dish {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
@@ -18,4 +18,7 @@ public class Product {
     @Getter
     @Setter
     private String name;
+    @Getter
+    @Setter
+    private String description;
 }
