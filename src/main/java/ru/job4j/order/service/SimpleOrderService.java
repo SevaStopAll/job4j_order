@@ -25,6 +25,7 @@ public class SimpleOrderService implements OrderService {
         data.put("customer", order.getCustomer().getName());
         data.put("dishes", order.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
         kafkaTemplate.send("job4j_orders", data);
+        kafkaTemplate.send("job4j_messengers", order.getCustomer().getId());
         return Optional.of(savedOrder);
     }
 
