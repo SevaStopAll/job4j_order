@@ -2,29 +2,37 @@ package ru.job4j.order.service;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import ru.job4j.order.domain.Dish;
 import ru.job4j.order.domain.Order;
+import ru.job4j.order.domain.Dish;
 import ru.job4j.order.repository.OrderRepository;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class SimpleOrderService implements OrderService {
     private final OrderRepository orders;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    
+    @Override
+    public Optional<Order> save(Order order) {
+        var savedOrder = orders.save(order);
+        Map data = new HashMap();
+        data.put("id", order.getId());
+        data.put("customer", order.getCustomer().getName());
+        data.put("dishes", order.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
+        kafkaTemplate.send("job4j_orders", data);
+        return Optional.of(savedOrder);
+    }
 
     @Override
     public Optional<Order> findById(int id) {
         return orders.findById(id);
     }
 
-    @Override
-    public Optional<Order> save(Order order) {
-        return Optional.of(orders.save(order));
-    }
 
     @Override
     public Collection<Order> findAll() {

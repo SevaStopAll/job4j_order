@@ -21,7 +21,7 @@ public class Order {
     private int id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer")
     @Setter
     @Getter
     private Customer customer;
