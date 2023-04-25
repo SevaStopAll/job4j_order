@@ -8,6 +8,8 @@ import ru.job4j.order.domain.Order;
 import ru.job4j.order.domain.Dish;
 import ru.job4j.order.repository.OrderRepository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,8 @@ public class SimpleOrderService implements OrderService {
         data.put("id", order.getId());
         data.put("customer", order.getCustomer().getName());
         data.put("dishes", order.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
-        kafkaTemplate.send("job4j_orders", data);
+        kafkaTemplate.send("job4j_preorder", LocalDateTime.now().toString());
+/*        kafkaTemplate.send("job4j_orders", data);*/
         kafkaTemplate.send("job4j_messengers", order.getCustomer().getId());
         return Optional.of(savedOrder);
     }
