@@ -2,21 +2,29 @@ package ru.job4j.order.service;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.job4j.order.domain.Order;
 import ru.job4j.order.domain.Dish;
+import ru.job4j.order.domain.Status;
+import ru.job4j.order.repository.CustomerRepository;
 import ru.job4j.order.repository.OrderRepository;
+import ru.job4j.order.repository.StatusRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @AllArgsConstructor
 public class SimpleOrderService implements OrderService {
     private final OrderRepository orders;
+    private final StatusRepository statuses;
+
+    private final CustomerRepository customers;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     
     @Override
@@ -26,8 +34,9 @@ public class SimpleOrderService implements OrderService {
         data.put("id", order.getId());
         data.put("customer", order.getCustomer().getName());
         data.put("dishes", order.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
-        kafkaTemplate.send("job4j_preorder", LocalDateTime.now().toString());
-/*        kafkaTemplate.send("job4j_orders", data);*/
+        data.put("time", LocalDateTime.now());
+        data.put("status", 1);
+        kafkaTemplate.send("job4j_preorder", data);
         kafkaTemplate.send("job4j_messengers", order.getCustomer().getId());
         return Optional.of(savedOrder);
     }
@@ -68,5 +77,21 @@ public class SimpleOrderService implements OrderService {
     @Override
     public List<Integer> getDishesIds(Optional<Order> order) {
         return order.get().getDishes().stream().mapToInt(Dish::getId).boxed().toList();
+    }
+
+    public Optional<Status> findStatusById(int id) {
+        return statuses.findById(id);
+    }
+
+    @KafkaListener(topics = "cooked_order")
+    public void receiveStatus(Map<String, Integer> data) {
+        Order order = new Order();
+        int id = data.get("id");
+        order.setId(id);
+        order.setStatus(findStatusById(data.get("status")).get());
+        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        log.debug(String.valueOf(data.get("id")));
+        log.debug(String.valueOf(data.get("status")));
+        update(order);
     }
 }

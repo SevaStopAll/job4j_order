@@ -26,7 +26,7 @@ public class Order {
     @Getter
     private Customer customer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "status")
     @Setter
     @Getter
