@@ -37,7 +37,8 @@ public class SimpleOrderService implements OrderService {
         data.put("time", LocalDateTime.now());
         data.put("status", 1);
         kafkaTemplate.send("job4j_preorder", data);
-        kafkaTemplate.send("job4j_messengers", order.getCustomer().getId());
+        String description = "Уважаемый клиент, Ваш заказ создан";
+        kafkaTemplate.send("job4j_messengers", description);
         return Optional.of(savedOrder);
     }
 
@@ -45,7 +46,6 @@ public class SimpleOrderService implements OrderService {
     public Optional<Order> findById(int id) {
         return orders.findById(id);
     }
-
 
     @Override
     public Collection<Order> findAll() {
@@ -68,7 +68,9 @@ public class SimpleOrderService implements OrderService {
     @Override
     public boolean update(Order order) {
         if (orders.findById(order.getId()).isPresent()) {
-            this.orders.save(order);
+            orders.save(order);
+            String notification = "Уважаемый клиент, статус Ваш заказ " + order.getStatus().getName();
+            kafkaTemplate.send("job4j_messengers", notification);
             return true;
         }
         return false;
