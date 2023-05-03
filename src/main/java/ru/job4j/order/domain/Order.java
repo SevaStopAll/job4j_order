@@ -27,6 +27,12 @@ public class Order {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "pay_method")
+    @Setter
+    @Getter
+    private PayMethod method;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "status")
     @Setter
     @Getter
@@ -42,4 +48,7 @@ public class Order {
     @Getter
     private List<Dish> dishes = new ArrayList<>();
 
+    @Getter
+    @Setter
+    private int price;
 }

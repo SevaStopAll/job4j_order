@@ -16,6 +16,7 @@ import ru.job4j.order.repository.StatusRepository;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Slf4j
@@ -29,12 +30,17 @@ public class SimpleOrderService implements OrderService {
     
     @Override
     public Optional<Order> save(Order order) {
+        var totalPrice = order.getDishes().stream().flatMapToInt(dish -> IntStream.of(dish.getPrice())).reduce((d1, d2) -> d1+ d2).getAsInt();
+        order.setPrice(totalPrice);
         var savedOrder = orders.save(order);
         Map data = new HashMap();
         data.put("id", order.getId());
         data.put("customer", order.getCustomer().getName());
+        data.put("address", order.getCustomer().getAddress());
         data.put("dishes", order.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
         data.put("time", LocalDateTime.now());
+        data.put("price", order.getPrice());
+        data.put("payment_method", order.getMethod().getName());
         data.put("status", 1);
         kafkaTemplate.send("job4j_preorder", data);
         String description = "Уважаемый клиент, Ваш заказ создан";
@@ -86,7 +92,58 @@ public class SimpleOrderService implements OrderService {
     }
 
     @KafkaListener(topics = "cooked_order")
-    public void receiveStatus(Map<String, Integer> data) {
+    public void receiveCookingStatus(Map data) {
+        Order order = new Order();
+        int id = (int) data.get("id");
+        order.setId(id);
+        order.setStatus(findStatusById((Integer) data.get("status")).get());
+        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        log.debug(String.valueOf(data.get("id")));
+        log.debug(String.valueOf(data.get("status")));
+        update(order);
+    }
+
+    public void sendToDelivery(int id) {
+        var order = orders.findById(id);
+        if (order.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        var orderToDeliver = order.get();
+        Map data = new HashMap();
+        data.put("address", orderToDeliver.getCustomer().getAddress());
+        data.put("dishes", orderToDeliver.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
+        data.put("price", orderToDeliver.getPrice());
+        data.put("payment_method", orderToDeliver.getMethod().getName());
+        kafkaTemplate.send("delivery_service", data);
+    };
+
+    @KafkaListener(topics = "delivered_order")
+    public void recieveDeliveryStatus(Map<String, Integer> data) {
+        Order order = new Order();
+        int id = data.get("id");
+        order.setId(id);
+        order.setStatus(findStatusById(data.get("status")).get());
+        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        log.debug(String.valueOf(data.get("id")));
+        log.debug(String.valueOf(data.get("status")));
+        update(order);
+    }
+
+    public void sendToPayment(int id) {
+        var order = orders.findById(id);
+        if (order.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        var orderToPay = order.get();
+        Map data = new HashMap();
+        data.put("time", LocalDateTime.now());
+        data.put("price", orderToPay.getPrice());
+        data.put("payment_method", orderToPay.getMethod().getName());
+        kafkaTemplate.send("payment_service", data);
+    }
+
+    @KafkaListener(topics = "paid_order")
+    public void recievePaymentStatus(Map<String, Integer> data) {
         Order order = new Order();
         int id = data.get("id");
         order.setId(id);
