@@ -116,7 +116,6 @@ public class SimpleOrderService implements OrderService {
         var orderToDeliver = order.get();
         Map data = new HashMap();
         data.put("address", orderToDeliver.getCustomer().getAddress());
-        data.put("dishes", orderToDeliver.getDishes().stream().map(dish -> dish.getId()).collect(Collectors.toList()));
         data.put("price", orderToDeliver.getPrice());
         data.put("payment_method", orderToDeliver.getMethod().getName());
         kafkaTemplate.send("delivery_service", data);
