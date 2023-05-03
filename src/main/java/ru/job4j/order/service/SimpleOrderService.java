@@ -24,12 +24,13 @@ import java.util.stream.IntStream;
 public class SimpleOrderService implements OrderService {
     private final OrderRepository orders;
     private final StatusRepository statuses;
-
     private final CustomerRepository customers;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     
     @Override
     public Optional<Order> save(Order order) {
+        System.out.println(order.getMethod());
+
         var totalPrice = order.getDishes().stream().flatMapToInt(dish -> IntStream.of(dish.getPrice())).reduce((d1, d2) -> d1+ d2).getAsInt();
         order.setPrice(totalPrice);
         var savedOrder = orders.save(order);
@@ -93,14 +94,18 @@ public class SimpleOrderService implements OrderService {
 
     @KafkaListener(topics = "cooked_order")
     public void receiveCookingStatus(Map data) {
-        Order order = new Order();
-        int id = (int) data.get("id");
-        order.setId(id);
-        order.setStatus(findStatusById((Integer) data.get("status")).get());
-        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        var order = orders.findById((int) data.get("id"));
+        if (order.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        var updatedOrder = order.get();
+        updatedOrder.setStatus(findStatusById((Integer) data.get("status")).get());
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
-        update(order);
+        update(updatedOrder);
+        if (data.get("status").equals(2)) {
+            sendToDelivery(updatedOrder.getId());
+        }
     }
 
     public void sendToDelivery(int id) {
@@ -115,7 +120,7 @@ public class SimpleOrderService implements OrderService {
         data.put("price", orderToDeliver.getPrice());
         data.put("payment_method", orderToDeliver.getMethod().getName());
         kafkaTemplate.send("delivery_service", data);
-    };
+    }
 
     @KafkaListener(topics = "delivered_order")
     public void recieveDeliveryStatus(Map<String, Integer> data) {
@@ -127,6 +132,9 @@ public class SimpleOrderService implements OrderService {
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
         update(order);
+        if (data.get("status").equals(3)) {
+        sendToPayment(order.getId());
+        }
     }
 
     public void sendToPayment(int id) {
