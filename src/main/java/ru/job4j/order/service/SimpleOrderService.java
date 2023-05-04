@@ -146,7 +146,7 @@ public class SimpleOrderService implements OrderService {
         Map data = new HashMap();
         data.put("time", LocalDateTime.now());
         data.put("price", orderToPay.getPrice());
-        data.put("payment_method", orderToPay.getMethod().getName());
+        data.put("payment_method", orderToPay.getMethod().getId());
         kafkaTemplate.send("payment_service", data);
     }
 
@@ -157,7 +157,11 @@ public class SimpleOrderService implements OrderService {
             throw new IllegalArgumentException();
         }
         var updatedOrder = order.get();
-        updatedOrder.setStatus(findStatusById((Integer) data.get("status")).get());
+        int status = data.get("status");
+        if (status == 2) {
+            updatedOrder.setStatus(findStatusById(4).get());
+        }
+        updatedOrder.setStatus(findStatusById(5).get());
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
         update(updatedOrder);
