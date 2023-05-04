@@ -123,16 +123,17 @@ public class SimpleOrderService implements OrderService {
 
     @KafkaListener(topics = "delivered_order")
     public void recieveDeliveryStatus(Map<String, Integer> data) {
-        Order order = new Order();
-        int id = data.get("id");
-        order.setId(id);
-        order.setStatus(findStatusById(data.get("status")).get());
-        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        var order = orders.findById((int) data.get("id"));
+        if (order.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        var updatedOrder = order.get();
+        updatedOrder.setStatus(findStatusById((Integer) data.get("status")).get());
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
-        update(order);
+        update(updatedOrder);
         if (data.get("status").equals(3)) {
-        sendToPayment(order.getId());
+        sendToPayment(updatedOrder.getId());
         }
     }
 
@@ -151,13 +152,14 @@ public class SimpleOrderService implements OrderService {
 
     @KafkaListener(topics = "paid_order")
     public void recievePaymentStatus(Map<String, Integer> data) {
-        Order order = new Order();
-        int id = data.get("id");
-        order.setId(id);
-        order.setStatus(findStatusById(data.get("status")).get());
-        order.setCustomer(customers.findByName(orders.findById(id).get().getCustomer().getName()).get());
+        var order = orders.findById((int) data.get("id"));
+        if (order.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        var updatedOrder = order.get();
+        updatedOrder.setStatus(findStatusById((Integer) data.get("status")).get());
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
-        update(order);
+        update(updatedOrder);
     }
 }
