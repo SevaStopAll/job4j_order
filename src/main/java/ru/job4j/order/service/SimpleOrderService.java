@@ -132,7 +132,7 @@ public class SimpleOrderService implements OrderService {
         log.debug(String.valueOf(data.get("id")));
         log.debug(String.valueOf(data.get("status")));
         update(updatedOrder);
-        if (data.get("status").equals(3)) {
+        if (data.get("status").equals(2)) {
         sendToPayment(updatedOrder.getId());
         }
     }
