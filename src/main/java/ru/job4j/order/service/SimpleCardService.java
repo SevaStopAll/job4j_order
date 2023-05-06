@@ -13,11 +13,23 @@ import java.util.Optional;
 public class SimpleCardService implements CardService {
     private final CardRepository cards;
 
+    /**
+     * Сохранить новую карту лояльности в базе.
+     *
+     * @param card карта лояльности.
+     * @return Optional карты с id.
+     */
     @Override
     public Optional<Card> save(Card card) {
         return Optional.of(cards.save(card));
     }
 
+    /**
+     * Найти карту по клиенту.
+     *
+     * @param customer клиент.
+     * @return Optional карты с id.
+     */
     @Override
     public Optional<Card> findByCustomer(Customer customer) {
         return cards.findByCustomerId(customer.getId());

@@ -14,21 +14,44 @@ import java.util.Optional;
 public class SimpleCustomerService implements CustomerService {
     private final CustomerRepository customers;
 
+    /**
+     * Найти клиента по имени.
+     *
+     * @param customerName имя клиента.
+     * @return Optional клиента.
+     */
     @Override
     public Optional<Customer> findByName(String customerName) {
         return customers.findByName(customerName);
     }
 
+    /**
+     * Сохранить клиента в базе.
+     *
+     * @param customer клиент.
+     * @return Optional клиента с id.
+     */
     @Override
     public Optional<Customer> save(Customer customer) {
         return Optional.of(customers.save(customer));
     }
 
+    /**
+     * Показать всех клиентов.
+     *
+     * @return Список всех клиентов.
+     */
     @Override
     public Collection<Customer> findAll() {
         return customers.findAll();
     }
 
+    /**
+     * Удалить клиента по id.
+     *
+     * @param id идентификатор клиента.
+     * @return boolean результат удаление.
+     */
     @Transactional
     public boolean delete(int id) {
         if (customers.findById(id).isPresent()) {

@@ -12,6 +12,11 @@ import java.util.Collection;
 public class SimpleStatusService implements StatusService {
     private final StatusRepository statuses;
 
+    /**
+     * Вывести все возможные статусы заказа.
+     *
+     * @return Список всех статусов.
+     */
     @Override
     public Collection<Status> findAll() {
         return statuses.findAll();

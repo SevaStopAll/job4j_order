@@ -26,7 +26,14 @@ public class SimpleOrderService implements OrderService {
     private final StatusRepository statuses;
     private final CustomerRepository customers;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    
+
+
+    /**
+     * Создать новый заказ.
+     *
+     * @param order заказ.
+     * @return Optional заказа.
+     */
     @Override
     public Optional<Order> save(Order order) {
         System.out.println(order.getMethod());
@@ -49,16 +56,33 @@ public class SimpleOrderService implements OrderService {
         return Optional.of(savedOrder);
     }
 
+    /**
+     * Найти заказ по идентификатору.
+     *
+     * @param id имя заказа.
+     * @return Optional заказа.
+     */
     @Override
     public Optional<Order> findById(int id) {
         return orders.findById(id);
     }
 
+    /**
+     * Вывести все заказы.
+     *
+     * @return Список всех статусов.
+     */
     @Override
     public Collection<Order> findAll() {
         return orders.findAll();
     }
 
+    /**
+     * Удалить заказ по идентификатору.
+     *
+     * @param id имя заказа.
+     * @return результат удаления.
+     */
     @Transactional
     @Override
     public boolean delete(int id) {
@@ -71,6 +95,12 @@ public class SimpleOrderService implements OrderService {
         return false;
     }
 
+    /**
+     * Обновить заказ и отправить уведомление пользователю.
+     *
+     * @param order заказ, на который обновляем.
+     * @return результат обновления.
+     */
     @Transactional
     @Override
     public boolean update(Order order) {
@@ -83,15 +113,32 @@ public class SimpleOrderService implements OrderService {
         return false;
     }
 
+    /**
+     * Вывести список идентификаторов блюд, входящих в заказ.
+     *
+     * @param order заказ, в котором находим блюда.
+     * @return список идентификаторов блюд.
+     */
     @Override
     public List<Integer> getDishesIds(Optional<Order> order) {
         return order.get().getDishes().stream().mapToInt(Dish::getId).boxed().toList();
     }
 
+    /**
+     * Найти статус по его id.
+     *
+     * @param id статус заказ.
+     * @return Optional статуса.
+     */
     public Optional<Status> findStatusById(int id) {
         return statuses.findById(id);
     }
 
+    /**
+     * Получить с кухни данные по заказу.
+     *
+     * @param data данные по заказу.
+     */
     @KafkaListener(topics = "cooked_order")
     public void receiveCookingStatus(Map data) {
         var order = orders.findById((int) data.get("id"));
@@ -108,6 +155,11 @@ public class SimpleOrderService implements OrderService {
         }
     }
 
+    /**
+     * Отправить службе доставки данные по заказу(идентификатор и статус).
+     *
+     * @param id идентификатор заказа.
+     */
     public void sendToDelivery(int id) {
         var order = orders.findById(id);
         if (order.isEmpty()) {
@@ -121,6 +173,11 @@ public class SimpleOrderService implements OrderService {
         kafkaTemplate.send("delivery_service", data);
     }
 
+    /**
+     * Получить от службы доставки статус по заказу.
+     *
+     * @param data данные по заказу (идентификатор и статус).
+     */
     @KafkaListener(topics = "delivered_order")
     public void recieveDeliveryStatus(Map<String, Integer> data) {
         var order = orders.findById((int) data.get("id"));
@@ -137,6 +194,11 @@ public class SimpleOrderService implements OrderService {
         }
     }
 
+    /**
+     * Отправить сервису оплаты данные по заказу(идентификатор и статус).
+     *
+     * @param id идентификатор заказа.
+     */
     public void sendToPayment(int id) {
         var order = orders.findById(id);
         if (order.isEmpty()) {
@@ -150,6 +212,11 @@ public class SimpleOrderService implements OrderService {
         kafkaTemplate.send("payment_service", data);
     }
 
+    /**
+     * Получить от службы оплаты статус по заказу.
+     *
+     * @param data данные по заказу (идентификатор и статус).
+     */
     @KafkaListener(topics = "paid_order")
     public void recievePaymentStatus(Map<String, Integer> data) {
         var order = orders.findById((int) data.get("id"));
