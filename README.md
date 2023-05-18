@@ -5,7 +5,10 @@
 Данный проект, созданный на REST принципах, является частью учебного проекта для изучения микросервисной архитектуры. 
 Центральная часть микросервисов доставки. 
 Остальные части проекта:
-[a link]([https://github.com/user/repo/blob/branch/other_file.md](https://github.com/SevaStopAll/job4j_kitchen)])
+[a link](https://github.com/SevaStopAll/job4j_kitchen)
+[a link](https://github.com/SevaStopAll/job4j_delivery)
+[a link](https://github.com/SevaStopAll/job4j_payment)
+[a link](https://github.com/SevaStopAll/job4j_notification)
 
 ## Схема работы сервиса.
 
